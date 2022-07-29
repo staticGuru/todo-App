@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "simple-todo",
+    "slug": "simple-todo",
+    "version": "0.1.3",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.guru.todoapp",
+      "buildNumber": "0.1.3"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.guru.todoapp",
+      "versionCode": 3
+    },
+    "web": {
+      "icon": "./assets/icon.png"
+    },
+    "description": "Simple Todo Application made by React Native"
+  }
+}
