@@ -108,12 +108,14 @@ export default function Main() {
        
         <Header />
 
-        <View style={styles.content}>
+        <ScrollView scrollEnabled={true} style={styles.content}>
           {/* to form */ }
           <AddTodo submitHandler={submitHandler} />
           <View style={styles.list}>
           <Text style={styles.completedText}>Inprogress</Text>
             <FlatList
+            nestedScrollEnabled={true}
+            listKey={1}
               data={todos.filter((todo) => todo.status !== "completed")}
               renderItem={renderItem}
               keyExtractor={(item) => item.id}
@@ -124,6 +126,8 @@ export default function Main() {
             />
           <Text style={styles.completedText}>Completed</Text>
             <FlatList
+            nestedScrollEnabled={true}
+            listKey={2}
               data={todos.filter((todo) => todo.status === "completed")}
               renderItem={renderItem}
               keyExtractor={(item) => item.id}
@@ -133,7 +137,7 @@ export default function Main() {
               }
             />
           </View>
-        </View>
+        </ScrollView>
       </View>
     </TouchableWithoutFeedback>
   );
