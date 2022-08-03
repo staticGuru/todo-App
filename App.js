@@ -8,6 +8,8 @@ import { StatusBar } from "expo-status-bar";
 
 import Main from "./src/Components/Main";
 import CheckIn from "./src/screens/CheckIn";
+import * as Notifications from "expo-notifications";
+
 
 // https://expo.io/@staticguru/signal-clone
 const Stack = createStackNavigator();
@@ -18,6 +20,13 @@ const globelScreenOptions = {
   headerShown:false,
 
 };
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 export default function App({ navigation }) {
   return (
     <React.Fragment>

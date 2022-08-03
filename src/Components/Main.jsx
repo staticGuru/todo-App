@@ -11,6 +11,8 @@ import {
   ScrollView,
   Modal,
   Pressable,
+  SectionList,
+  SafeAreaView,
 } from "react-native";
 
 import Header from "./Header";
@@ -26,11 +28,29 @@ const wait = (timeout) => {
 export default function Main() {
   const [todos, setTodos] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [Data, setData] = useState([]);
 
   const dataLoader = () => {
+    console.log("calleddd")
     showAllTasks()
       .then((resp) => {
         setTodos(resp.tasks);
+      })
+      .then(() => {
+        setData([
+          {
+            title: "Inprogress",
+            data: todos.filter((todo) => todo.status !== "completed"),
+          },
+          {
+            title: "Completed",
+            data: todos.filter((todo) => todo.status === "completed"),
+          },
+        ]);
+      }).then(()=>{
+        todos.filter((todo) => todo.status === "inprogress")?.map(e=>{
+          
+        })
       })
       .catch((err) => console.log(err));
   };
@@ -72,17 +92,15 @@ export default function Main() {
   const submitHandler = (data) => {
     const { text, description, status, dueDate } = data;
     if (text && description && status && dueDate) {
-      
       createTask({
-        title: text??'',
-        description: description??'description',
-        status: status??'Inprogress',
-        due_at: dueDate??'Date',
+        title: text ?? "",
+        description: description ?? "description",
+        status: status ?? "Inprogress",
+        due_at: dueDate ?? "Date",
       })
         .then((resp) => {
           if (resp.message === "Task created successfully") {
             showAllTasks().then((res) => {
-
               setTodos(res.tasks);
               dataLoader();
             });
@@ -98,24 +116,29 @@ export default function Main() {
   };
 
   return (
-   <TouchableWithoutFeedback
-      onPress={() => {
-        Keyboard.dismiss();
-        console.log("Dismiss Keyboard");
-      }}
-    >
+  
       <View style={styles.container}>
-       
         <Header />
 
-        <ScrollView scrollEnabled={true} style={styles.content}>
-          {/* to form */ }
+        <View style={styles.content}>
+          {/* to form */}
           <AddTodo submitHandler={submitHandler} />
-          <View style={styles.list}>
-          <Text style={styles.completedText}>Inprogress</Text>
+          <SafeAreaView style={styles.list}>
+            <SectionList
+              sections={Data}
+              keyExtractor={(item, index) => item + index}
+              renderItem={renderItem}
+              renderSectionHeader={({ section: { title } }) => (
+                <Text style={styles.completedText}>{title}</Text>
+              )}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
+            />
+             {/* <Text style={styles.completedText}>Inprogress</Text>
             <FlatList
-            nestedScrollEnabled={true}
-            listKey={1}
+              nestedScrollEnabled={true}
+              listKey={1}
               data={todos.filter((todo) => todo.status !== "completed")}
               renderItem={renderItem}
               keyExtractor={(item) => item.id}
@@ -124,7 +147,7 @@ export default function Main() {
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
             />
-          <Text style={styles.completedText}>Completed</Text>
+           <Text style={styles.completedText}>Completed</Text>
             <FlatList
             nestedScrollEnabled={true}
             listKey={2}
@@ -135,11 +158,10 @@ export default function Main() {
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
-            />
-          </View>
-        </ScrollView>
+            />*/}
+          </SafeAreaView>
+        </View>
       </View>
-    </TouchableWithoutFeedback>
   );
 }
 
@@ -157,10 +179,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     backgroundColor: "#668aff",
     paddingVertical: 10,
-    paddingHorizontal:10,
-    borderRadius:5,
-    marginVertical:10
-
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    marginVertical: 10,
   },
   input: {
     marginBottom: 10,
@@ -171,7 +192,7 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
-    marginTop: 20,
+    marginTop: 10,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -179,9 +200,9 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
+    // elevation: 2,
     minHeight: 600,
-    paddingHorizontal: 5,
+    paddingHorizontal: 1,
     backgroundColor: "white",
     borderRadius: 10,
   },

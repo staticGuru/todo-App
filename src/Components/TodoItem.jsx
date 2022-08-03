@@ -7,7 +7,7 @@ const TodoItem = ({ item, pressHandler, dataLoader }) => {
   const deleteHandler = (ID) => {
     deleteTask(ID)
       .then(() => {
-        // pressHandler();
+      //  pressHandler();
         dataLoader();
         console.log("Item deleted");
       })

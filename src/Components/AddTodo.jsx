@@ -1,10 +1,11 @@
 import { useNavigation } from "@react-navigation/native";
-import React, { useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
   TextInput,
   Button,
+  Platform,
   View,
   TouchableOpacity,
   Modal,
@@ -12,12 +13,15 @@ import {
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
 
 const AddTodo = ({ submitHandler, showModalHandler }) => {
   const [text, setText] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectedDate, setSelectedDate] = useState("");
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
   const [open, setOpen] = useState(false);
@@ -25,9 +29,66 @@ const AddTodo = ({ submitHandler, showModalHandler }) => {
   const [items, setItems] = useState([
     { label: "Complete", value: "completed" },
     { label: "Inprogress", value: "inprogress" },
-     { label: "Incomplete", value: "incomplete" },
+    { label: "Incomplete", value: "incomplete" },
   ]);
+  const [expoPushToken, setExpoPushToken] = useState("");
+  const [notification, setNotification] = useState(false);
+  const notificationListener = useRef();
+  const responseListener = useRef();
   const navigation = useNavigation();
+  useEffect(() => {
+    registerForPushNotificationsAsync().then((token) =>
+      setExpoPushToken(token)
+    );
+
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        setNotification(notification);
+      });
+
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log("Notification-response", response);
+      });
+
+    return () => {
+      Notifications.removeNotificationSubscription(
+        notificationListener.current
+      );
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
+  async function registerForPushNotificationsAsync() {
+    let token;
+    if (Device.isDevice) {
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== "granted") {
+        alert("Failed to get push token for push notification!");
+        return;
+      }
+      token = (await Notifications.getExpoPushTokenAsync()).data;
+      console.log(token);
+    } else {
+      alert("Must use physical device for Push Notifications");
+    }
+
+    if (Platform.OS === "android") {
+      Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C",
+      });
+    }
+
+    return token;
+  }
   const changeHandler = (val) => {
     setText(val);
   };
@@ -58,7 +119,8 @@ const AddTodo = ({ submitHandler, showModalHandler }) => {
   }
   const handleConfirm = (date) => {
     setDueDate(formatDate(date));
-    console.warn("A date has been picked: ", formatDate(date));
+    setSelectedDate(date);
+    console.log("A date has been picked: ", formatDate(date), date);
     hideDatePicker();
   };
 
@@ -66,13 +128,33 @@ const AddTodo = ({ submitHandler, showModalHandler }) => {
     setDatePickerVisibility(false);
   };
   const submitAndClear = () => {
-    submitHandler({ text, description, dueDate, status: value??"inprogress" });
+    submitHandler({
+      text,
+      description,
+      dueDate,
+      status: value ?? "inprogress",
+    });
+    var dateInSeconds =
+    (new Date(selectedDate).getTime() - new Date().getTime()) / 1000;
+    schedulePushNotification(id,dateInSeconds,text,description);
     // console.log("fdf", text, description, dueDate, value??"inprogress" )
     changeHandler("");
     changeDescription("");
     setDueDate("");
+    setSelectedDate("");
     setModalVisible(!modalVisible);
   };
+  async function schedulePushNotification(id,time,title,description) {
+    await Notifications.scheduleNotificationAsync({
+      identifier:id,
+      content: {
+        title: title,
+        body: description,
+        data: { data: "goes here" },
+      },
+      trigger: { seconds: time },
+    });
+  }
 
   return (
     <View>
@@ -84,9 +166,7 @@ const AddTodo = ({ submitHandler, showModalHandler }) => {
   />*/}
       <Modal
         animationType="slide"
-        style={{ borderColor:'blue',
-        borderWidth:0.5}}
-     
+        style={{ borderColor: "blue", borderWidth: 0.5 }}
         visible={modalVisible}
         transparent={true}
         onRequestClose={() => {
@@ -127,17 +207,17 @@ const AddTodo = ({ submitHandler, showModalHandler }) => {
                 <Text style={styles.input}>{dueDate}</Text>
               )}
               <DropDownPicker
-              placeholder="Status"
-              open={open}
-              value={value}
-              items={items}
-              setOpen={setOpen}
-              setValue={setValue}
-              setItems={setItems}
-              style={{width:'90%',marginVertical:15}}
-              // mode="BADGE"
-              // badgeDotColors={["#e76f51", "#00b4d8", "#e9c46a", "#e76f51", "#8ac926", "#00b4d8", "#e9c46a"]}
-            />
+                placeholder="Status"
+                open={open}
+                value={value}
+                items={items}
+                setOpen={setOpen}
+                setValue={setValue}
+                setItems={setItems}
+                style={{ width: "90%", marginVertical: 15 }}
+                // mode="BADGE"
+                // badgeDotColors={["#e76f51", "#00b4d8", "#e9c46a", "#e76f51", "#8ac926", "#00b4d8", "#e9c46a"]}
+              />
               <DateTimePickerModal
                 isVisible={isDatePickerVisible}
                 mode="datetime"
@@ -145,7 +225,7 @@ const AddTodo = ({ submitHandler, showModalHandler }) => {
                 onConfirm={handleConfirm}
                 onCancel={hideDatePicker}
               />
-              <View style={{justifyContent: 'center',alignItems:'center'}}>
+              <View style={{ justifyContent: "center", alignItems: "center" }}>
                 <Pressable
                   style={[styles.button, styles.buttonClose]}
                   onPress={submitAndClear}
@@ -166,6 +246,8 @@ const AddTodo = ({ submitHandler, showModalHandler }) => {
 
       <TouchableOpacity
         onPress={() => setModalVisible(!modalVisible)}
+        // onPress={() => schedulePushNotification()}
+
         style={styles.submitContainer}
       >
         <Text style={styles.addNew}>+ Add new task</Text>
@@ -194,7 +276,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#ddd",
     width: "100%",
-    fontSize:18
+    fontSize: 18,
   },
   submitContainer: {
     marginBottom: 10,
@@ -213,7 +295,6 @@ const styles = StyleSheet.create({
     // alignItems: "center",
     marginTop: 22,
     width: "90%",
-   
 
     // minWidth:500
   },
@@ -243,8 +324,8 @@ const styles = StyleSheet.create({
   },
   buttonClose: {
     backgroundColor: "#2196F3",
-    width:'80%',
-    marginBottom:10
+    width: "80%",
+    marginBottom: 10,
   },
   textStyle: {
     color: "white",
