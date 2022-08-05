@@ -128,28 +128,28 @@ const AddTodo = ({ submitHandler, showModalHandler }) => {
     setDatePickerVisibility(false);
   };
   const submitAndClear = () => {
-    // submitHandler({
-    //   text,
-    //   description,
-    //   dueDate,
-    //   status: value ?? "inprogress",
-    // });
-    // var dateInSeconds =
-    // (new Date(selectedDate).getTime() - new Date().getTime()) / 1000;
-    schedulePushNotification(2,2,"text","description");
-    // changeHandler("");
-    // changeDescription("");
-    // setDueDate("");
-    // setSelectedDate("");
-    // setModalVisible(!modalVisible);
+    submitHandler({
+      text,
+      description,
+      dueDate,
+      status: value ?? "inprogress",
+    });
+    var dateInSeconds =
+    (new Date(selectedDate).getTime() - new Date().getTime()) / 1000;
+    schedulePushNotification(2,dateInSeconds,"text","description");
+    changeHandler("");
+    changeDescription("");
+    setDueDate("");
+    setSelectedDate("");
+    setModalVisible(!modalVisible);
   };
   async function schedulePushNotification(id,time,title,description) {
     console.log("calledd1111111111")
     await Notifications.scheduleNotificationAsync({
-    
+     
       content: {
         title: title,
-        body: description,
+        body: time,
         data: { data: "goes here" },
       },
       trigger: { seconds: time },

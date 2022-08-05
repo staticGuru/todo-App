@@ -13,6 +13,7 @@ import {
   Pressable,
   SectionList,
   SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
 
 import Header from "./Header";
@@ -35,22 +36,21 @@ export default function Main() {
     showAllTasks()
       .then((resp) => {
         setTodos(resp.tasks);
+        return resp.tasks;
       })
-      .then(() => {
+      
+      .then((resp) => {
+        console.log("reeeee",resp);
         setData([
           {
             title: "Inprogress",
-            data: todos.filter((todo) => todo.status !== "completed"),
+            data: resp.filter((todo) => todo.status !== "completed"),
           },
           {
             title: "Completed",
-            data: todos.filter((todo) => todo.status === "completed"),
+            data: resp.filter((todo) => todo.status === "completed"),
           },
         ]);
-      }).then(()=>{
-        todos.filter((todo) => todo.status === "inprogress")?.map(e=>{
-          
-        })
       })
       .catch((err) => console.log(err));
   };
@@ -124,7 +124,7 @@ export default function Main() {
           {/* to form */}
           <AddTodo submitHandler={submitHandler} />
           <SafeAreaView style={styles.list}>
-            <SectionList
+            {Data.length >0 ?<SectionList
               sections={Data}
               keyExtractor={(item, index) => item + index}
               renderItem={renderItem}
@@ -134,7 +134,7 @@ export default function Main() {
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
-            />
+            />:<ActivityIndicator/>}
              {/* <Text style={styles.completedText}>Inprogress</Text>
             <FlatList
               nestedScrollEnabled={true}

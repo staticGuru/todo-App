@@ -12,6 +12,7 @@ import {
   Modal,
   Pressable,
   TouchableOpacity,
+  SafeAreaView,
 } from "react-native";
 import CheckInItem from "../Components/CheckInItem";
 import * as Location from "expo-location";
@@ -137,12 +138,7 @@ if(currentLocation){
   };
 
   return (
-    <TouchableWithoutFeedback
-      onPress={() => {
-        Keyboard.dismiss();
-        console.log("Dismiss Keyboard");
-      }}
-    >
+  
       <View style={styles.container}>
         <Header />
 
@@ -151,7 +147,7 @@ if(currentLocation){
           <TouchableOpacity onPress={locationHandler}>
             <Text style={styles.completedText}>+ Check In</Text>
           </TouchableOpacity>
-          <View style={styles.list}>
+          <SafeAreaView style={styles.list}>
             {currentLocation && (
               <View>
                 <Text style={styles.completedText}>Current Location</Text>
@@ -168,10 +164,9 @@ if(currentLocation){
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
             />
-          </View>
+          </SafeAreaView>
         </View>
       </View>
-    </TouchableWithoutFeedback>
   );
 }
 
